@@ -1,0 +1,129 @@
+use crate::tokens_cpp::{
+    Token,
+    LexicalError,
+};
+use crate::{
+    ConfigEntry,
+    EntryType,
+    CFGFlags,
+};
+
+grammar;
+
+extern {
+    type Location = usize;
+    type Error = LexicalError;
+
+    enum Token {
+        "config int" => Token::MacroConfigInt,
+        "config str" => Token::MacroConfigStr,
+        "config col" => Token::MacroConfigColor,
+
+        "flag save" => Token::FlagSave,
+        "flag client" => Token::FlagClient,
+        "flag server" => Token::FlagServer,
+        "flag insens" => Token::FlagInsensitive,
+        "flag teehist" => Token::FlagNonTeehistoric,
+        "flag master" => Token::FlagMaster,
+        "flag econ" => Token::FlagEcon,
+        "flag game" => Token::FlagGame,
+
+        "string lit" => Token::StringLiteral(<String>),
+        "ident" => Token::Identifier(<String>),
+        "int" => Token::Integer(<i64>),
+        "(" => Token::LParen,
+        ")" => Token::RParen,
+        "," => Token::Comma,
+        "|" => Token::Pipe,
+        "MaxClients" => Token::MaxClients,
+        "ServerInfoLevelMin" => Token::ServerInfoLevelMin,
+        "ServerInfoLevelMax" => Token::ServerInfoLevelMax,
+    }
+}
+
+pub Configs: Vec<ConfigEntry> = {
+    <entries:Entry*> => entries
+}
+
+Flag: CFGFlags = {
+    "flag save" => CFGFlags::SAVE,
+    "flag client" => CFGFlags::CLIENT,
+    "flag server" => CFGFlags::SERVER,
+    "flag insens" => CFGFlags::INSENSITIVE,
+    "flag teehist" => CFGFlags::NON_TEEHISTORIC,
+    "flag master" => CFGFlags::MASTER,
+    "flag econ" => CFGFlags::ECON,
+    "flag game" => CFGFlags::GAME,
+}
+
+Flags: CFGFlags = {
+    <f:(<Flag> "|")*> <e:Flag?> => match e {
+        None => {
+            let mut base = CFGFlags::empty();
+            base.extend(f.into_iter());
+            base
+        }
+        Some(e) => {
+            let mut base = e;
+            base.extend(f.into_iter());
+            base
+        }
+    }
+}
+
+Int: i64 = {
+    <x:"int"> => x,
+    "MaxClients" => 64,
+    "ServerInfoLevelMin" => 0,
+    "ServerInfoLevelMax" => 2,
+}
+
+Entry: ConfigEntry = {
+    "config int" "(" <sym:"ident"> "," <name:"ident"> ","
+        <def:Int> "," <min:Int> "," <max:Int> ","
+        <flags:Flags> "," <desc:"string lit"> ")" => {
+
+            ConfigEntry {
+                description: desc,
+                flags,
+                name,
+                symbol: sym,
+                entry_type: EntryType::Int {
+                    max,
+                    min,
+                    default: def,
+                    value: None,
+                }
+            }
+        },
+    "config str" "(" <sym:"ident"> "," <name:"ident"> ","
+        <max_length:Int> "," <default:"string lit"> ","
+        <flags:Flags> "," <desc:"string lit"> ")" => {
+
+            ConfigEntry {
+                description: desc,
+                flags,
+                name,
+                symbol: sym,
+                entry_type: EntryType::Str {
+                    max_length: max_length as usize,
+                    default,
+                    value: None,
+                }
+            }
+        },
+    "config col" "(" <sym:"ident"> "," <name:"ident"> ","
+        <default:Int> ","
+        <flags:Flags> "," <desc:"string lit"> ")" => {
+            ConfigEntry {
+                description: desc,
+                flags,
+                name,
+                symbol: sym,
+                entry_type: EntryType::Color {
+                    default,
+                    value: None,
+                }
+            }
+        }
+}
