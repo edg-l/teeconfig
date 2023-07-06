@@ -12,7 +12,7 @@ mod tokens_cpp;
 bitflags! {
     #[rustfmt::skip]
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-    struct CFGFlags: u32 {
+    struct CFGFlags: u16 {
         const SAVE =            1 << 0;
         const CLIENT =          1 << 1;
         const SERVER =          1 << 2;
