@@ -10,9 +10,10 @@ mod tokens_cfg;
 mod tokens_cpp;
 
 bitflags! {
+    /// Config option flags.
     #[rustfmt::skip]
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-    struct CFGFlags: u16 {
+    pub struct CFGFlags: u16 {
         const SAVE =            1 << 0;
         const CLIENT =          1 << 1;
         const SERVER =          1 << 2;
@@ -28,15 +29,15 @@ bitflags! {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConfigEntry {
     /// The description of this config entry.
-    description: String,
+    pub description: String,
     /// The type of the entry.
-    entry_type: EntryType,
+    pub entry_type: EntryType,
     /// The flags of the entry.
-    flags: CFGFlags,
+    pub flags: CFGFlags,
     /// The name of the entry, used in the config file.
-    name: String,
+    pub name: String,
     /// The symbol of the entry as used in the source code.
-    symbol: String,
+    pub symbol: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
