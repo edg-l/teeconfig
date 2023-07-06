@@ -1,5 +1,8 @@
 use bitflags::bitflags;
-use lalrpop_util::lalrpop_mod;
+use lalrpop_util::{lalrpop_mod, ParseError};
+use tokens_cpp::{LexicalError, Token};
+
+use crate::tokens_cpp::Lexer;
 
 mod tokens_cfg;
 mod tokens_cpp;
@@ -21,81 +24,67 @@ bitflags! {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConfigEntry {
+    /// The description of this config entry.
     description: String,
+    /// The type of the entry.
     entry_type: EntryType,
+    /// The flags of the entry.
     flags: CFGFlags,
+    /// The name of the entry, used in the config file.
     name: String,
+    /// The symbol of the entry as used in the source code.
     symbol: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EntryType {
     Str {
+        /// The max length of this string value config.
         max_length: usize,
+        /// The default string.
         default: String,
+        /// The value if used/filled by the config file.
         value: Option<String>,
     },
     Int {
+        /// The max value of this int config.
         max: i64,
+        /// The min value of this int config.
         min: i64,
+        /// The default value of this int config.
         default: i64,
+        /// The value if used/filled by the config file.
         value: Option<i64>,
     },
     Color {
+        /// The default value of this color config.
         default: i64,
+        /// The value if used/filled by the config file.
         value: Option<i64>,
     },
 }
 
 lalrpop_mod!(pub(crate) grammar_cpp);
 
+/// Parses the given header file containing the MACRO_CONFIG_XXX options.
+///
+/// Usually at `src/engine/shared/config_variables.h`
+pub fn parse_config_variables(
+    header_source: &str,
+) -> Result<Vec<ConfigEntry>, ParseError<usize, Token, LexicalError>> {
+    let lexer = Lexer::new(header_source);
+    let parser = grammar_cpp::ConfigsParser::new();
+    parser.parse(lexer)
+}
+
 #[cfg(test)]
 mod tests {
-    use lalrpop_util::ParseError;
-    use logos::Source;
-
-    use crate::tokens_cpp::{Lexer, LexicalError, LexingError, Token};
-
     use super::*;
 
     #[test]
     fn parses() {
-        let header_file = include_str!("../config_variables.h");
-        dbg!("before");
-        let lexer = Lexer::new(header_file);
-        dbg!("after");
-        let parser = grammar_cpp::ConfigsParser::new();
-        dbg!("after 2");
-
-        match parser.parse(lexer) {
-            Ok(entries) => {
-                dbg!(&entries);
-            }
-            Err(e) => {
-                dbg!(&e);
-                let x: ParseError<usize, Token, LexicalError> = e;
-                match x {
-                    ParseError::InvalidToken { location } => todo!(),
-                    ParseError::UnrecognizedEof { location, expected } => todo!(),
-                    ParseError::UnrecognizedToken { token, expected } => {
-                        dbg!("unrecognized token");
-                        dbg!(&token);
-                        dbg!(header_file.slice(token.0..token.2));
-                        dbg!(expected);
-                    }
-                    ParseError::ExtraToken { token } => todo!(),
-                    ParseError::User { error } => {
-                        match error {
-                            LexicalError::InvalidToken(a, r) => {
-                                dbg!("user invalid token");
-                                dbg!(a);
-                                dbg!(&r);
-                                println!("{:?}", header_file.slice(r).unwrap())
-                            }
-                        };
-                    }
-                };
-            }
-        };
+        let header_source = include_str!("../config_variables.h");
+        let vars = parse_config_variables(header_source).unwrap();
+        assert!(!vars.is_empty())
     }
 }
