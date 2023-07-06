@@ -15,6 +15,7 @@ bitflags! {
         const MASTER =  0b00100000;
         const ECON =  0b01000000;
         const GAME =  0b10000000;
+        const COLALPHA =  0b100000000;
     }
 }
 
@@ -60,14 +61,18 @@ mod tests {
     #[test]
     fn parses() {
         let header_file = include_str!("../config_variables.h");
+        dbg!("before");
         let lexer = Lexer::new(header_file);
+        dbg!("after");
         let parser = grammar_cpp::ConfigsParser::new();
+        dbg!("after 2");
 
         match parser.parse(lexer) {
             Ok(entries) => {
                 dbg!(&entries);
             }
             Err(e) => {
+                dbg!(&e);
                 let x: ParseError<usize, Token, LexicalError> = e;
                 match x {
                     ParseError::InvalidToken { location } => todo!(),
@@ -75,14 +80,16 @@ mod tests {
                     ParseError::UnrecognizedToken { token, expected } => {
                         dbg!("unrecognized token");
                         dbg!(&token);
-                        dbg!(header_file.slice(token.0 - 20..token.2 + 20));
+                        dbg!(header_file.slice(token.0..token.2));
                         dbg!(expected);
                     }
                     ParseError::ExtraToken { token } => todo!(),
                     ParseError::User { error } => {
                         match error {
-                            LexicalError::InvalidToken(_, r) => {
-                                dbg!("invalid token");
+                            LexicalError::InvalidToken(a, r) => {
+                                dbg!("user invalid token");
+                                dbg!(a);
+                                dbg!(&r);
                                 println!("{:?}", header_file.slice(r).unwrap())
                             }
                         };

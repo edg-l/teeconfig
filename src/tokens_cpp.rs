@@ -1,13 +1,13 @@
-use logos::{Logos, SpannedIter};
+use logos::{FilterResult, Logos, SpannedIter};
 use std::{convert::Infallible, fmt, ops::Range}; // to implement the Display trait
 
 #[derive(Logos, Clone, Debug, PartialEq)]
 #[logos(
     error = LexingError,
     skip r"[ \t\n\f]+",
-    skip r"/\*.*\*/" // why doesnt this skip?
-    skip r"#.*\n?",
-    skip r"//.*\n?",)]
+    skip r"#[^\n]*\n?",
+    skip r"//[^\n]*\n?",
+)]
 pub enum Token {
     #[token("MACRO_CONFIG_INT")]
     MacroConfigInt,
@@ -32,12 +32,17 @@ pub enum Token {
     FlagEcon,
     #[token("CFGFLAG_GAME")]
     FlagGame,
+    #[token("CFGFLAG_COLALPHA")]
+    FlagColAlpha,
 
-    #[regex(r#""(?:[^"]|\\")*""#, |lex| lex.slice().parse().ok())]
+    #[regex(r#""(?:[^"]|\\")*""#, |lex| {
+        let slice = lex.slice();
+        slice[1..(slice.len()-1)].to_string()
+    })]
     StringLiteral(String),
-    #[regex(r"[_a-zA-Z][_0-9a-zA-Z]+", |lex| lex.slice().parse().ok())]
+    #[regex(r"[_a-zA-Z][_0-9a-zA-Z]+", |lex| lex.slice().to_string())]
     Identifier(String),
-    #[regex(r"-?[0-9][_0-9]*", |lex| lex.slice().parse().ok())]
+    #[regex(r"-?[0-9][_0-9]*", |lex| lex.slice().parse())]
     Integer(i64),
 
     #[token("(")]
@@ -48,6 +53,8 @@ pub enum Token {
     Comma,
     #[token("|")]
     Pipe,
+    #[token(";")]
+    Semicolon,
     #[token("MAX_CLIENTS")]
     MaxClients,
 
@@ -55,6 +62,14 @@ pub enum Token {
     ServerInfoLevelMin,
     #[token("SERVERINFO_LEVEL_MAX")]
     ServerInfoLevelMax,
+
+    #[token("/*", |lex| {
+        let len = lex.remainder().find("*/").unwrap();
+        lex.bump(len + 2); // include len of `*/`
+
+        FilterResult::Skip::<(), Infallible>
+    })]
+    BlockComment,
 }
 
 impl fmt::Display for Token {
