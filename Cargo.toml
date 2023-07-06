@@ -2,6 +2,13 @@
 name = "teeconfig"
 version = "0.1.0-alpha.0"
 edition = "2021"
+authors = ["Edgar <git@edgarluque.com>"]
+description = "A teeworlds/ddnet config parser."
+repository = "https://github.com/edg-l/teeconfig/"
+license = "AGPL-3.0"
+keywords = ["ddnet", "teeworlds", "config", "parser"]
+documentation = "https://docs.rs/teeconfig"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

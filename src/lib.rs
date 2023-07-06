@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use bitflags::bitflags;
 use lalrpop_util::{lalrpop_mod, ParseError};
 use tokens_cpp::{LexicalError, Token};
