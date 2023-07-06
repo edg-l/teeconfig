@@ -10,17 +10,18 @@ mod tokens_cfg;
 mod tokens_cpp;
 
 bitflags! {
+    #[rustfmt::skip]
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
     struct CFGFlags: u32 {
-        const SAVE =            0b00000001;
-        const CLIENT =          0b00000010;
-        const SERVER =          0b00000100;
-        const INSENSITIVE =     0b00001000;
-        const NON_TEEHISTORIC =  0b00010000;
-        const MASTER =  0b00100000;
-        const ECON =  0b01000000;
-        const GAME =  0b10000000;
-        const COLALPHA =  0b100000000;
+        const SAVE =            1 << 0;
+        const CLIENT =          1 << 1;
+        const SERVER =          1 << 2;
+        const INSENSITIVE =     1 << 3;
+        const NON_TEEHISTORIC = 1 << 4;
+        const MASTER =          1 << 5;
+        const ECON =            1 << 6;
+        const GAME =            1 << 7;
+        const COLALPHA =        1 << 8;
     }
 }
 
