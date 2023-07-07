@@ -1,0 +1,43 @@
+use crate::tokens_cfg::{
+    ConfigToken,
+    ConfigLine,
+    Value
+};
+use crate::tokens_cpp::{
+    LexicalError,
+};
+
+grammar;
+
+extern {
+    type Location = usize;
+    type Error = LexicalError;
+
+    enum ConfigToken {
+        "string lit" => ConfigToken::StringLiteral(<String>),
+        "ident" => ConfigToken::Identifier(<String>),
+        "int" => ConfigToken::Integer(<i64>),
+        "ip" => ConfigToken::IP(<String>),
+        "endline" => ConfigToken::Endline,
+    }
+}
+
+pub Configs: Vec<ConfigLine> = {
+    <entries:Entry*> => entries
+}
+
+Value: Value = {
+    <x:"string lit"> => Value::String(x),
+    <x:"int"> => Value::Int(x),
+    <x:"ident"> => Value::Key(x),
+    <x:"ip"> => Value::IP(x),
+}
+
+Entry: ConfigLine = {
+    <name:"ident"> <values:Value*> "endline" => {
+        ConfigLine {
+            name,
+            values
+        }
+    }
+}

@@ -34,6 +34,8 @@ pub enum Token {
     FlagGame,
     #[token("CFGFLAG_COLALPHA")]
     FlagColAlpha,
+    #[token("CFGFLAG_COLLIGHT")]
+    FlagColLight,
 
     #[regex(r#""(?:[^"]|\\")*""#, |lex| {
         let slice = lex.slice();
@@ -42,6 +44,7 @@ pub enum Token {
     StringLiteral(String),
     #[regex(r"[_a-zA-Z][_0-9a-zA-Z]+", |lex| lex.slice().to_string())]
     Identifier(String),
+    #[regex(r"0x[0-9a-fA-F][_0-9a-fA-F]*", |lex| i64::from_str_radix(&lex.slice()[2..], 16))]
     #[regex(r"-?[0-9][_0-9]*", |lex| lex.slice().parse())]
     Integer(i64),
 
@@ -104,12 +107,12 @@ impl From<Infallible> for LexingError {
     }
 }
 
-pub struct Lexer<'input> {
+pub struct VarLexer<'input> {
     // instead of an iterator over characters, we have a token iterator
     token_stream: SpannedIter<'input, Token>,
 }
 
-impl<'input> Lexer<'input> {
+impl<'input> VarLexer<'input> {
     pub fn new(input: &'input str) -> Self {
         // the Token::lexer() method is provided by the Logos trait
         Self {
@@ -118,7 +121,7 @@ impl<'input> Lexer<'input> {
     }
 }
 
-impl<'input> Iterator for Lexer<'input> {
+impl<'input> Iterator for VarLexer<'input> {
     type Item = Spanned<Token, usize, LexicalError>;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,13 +1,18 @@
 #![doc = include_str!("../README.md")]
 
+use std::collections::HashMap;
+
 use bitflags::bitflags;
 use lalrpop_util::{lalrpop_mod, ParseError};
+use tokens_cfg::{ConfigLexer, ConfigToken};
 use tokens_cpp::{LexicalError, Token};
 
-use crate::tokens_cpp::Lexer;
+use crate::tokens_cpp::VarLexer;
 
-mod tokens_cfg;
-mod tokens_cpp;
+pub(crate) mod tokens_cfg;
+pub(crate) mod tokens_cpp;
+
+pub use tokens_cfg::{ConfigLine, Value as ConfigValue};
 
 bitflags! {
     /// Config option flags.
@@ -23,6 +28,7 @@ bitflags! {
         const ECON =            1 << 6;
         const GAME =            1 << 7;
         const COLALPHA =        1 << 8;
+        const COLLIGHT =        1 << 9;
     }
 }
 
@@ -69,6 +75,7 @@ pub enum EntryType {
 }
 
 lalrpop_mod!(pub(crate) grammar_cpp);
+lalrpop_mod!(pub(crate) grammar_config);
 
 /// Parses the given header file containing the MACRO_CONFIG_XXX options.
 ///
@@ -76,8 +83,25 @@ lalrpop_mod!(pub(crate) grammar_cpp);
 pub fn parse_config_variables(
     header_source: &str,
 ) -> Result<Vec<ConfigEntry>, ParseError<usize, Token, LexicalError>> {
-    let lexer = Lexer::new(header_source);
+    let lexer = VarLexer::new(header_source);
     let parser = grammar_cpp::ConfigsParser::new();
+    parser.parse(lexer)
+}
+
+/// Converts a list of config entries to a hashmap with name -> entry.
+pub fn map_with_names(entries: &[ConfigEntry]) -> HashMap<String, ConfigEntry> {
+    entries
+        .iter()
+        .map(|x| (x.name.clone(), x.clone()))
+        .collect()
+}
+
+/// Parses a ddnet / teeworlds config file. Like `settings_ddnet.cfg`
+pub fn parse_config(
+    settings_file: &str,
+) -> Result<Vec<ConfigLine>, ParseError<usize, ConfigToken, LexicalError>> {
+    let lexer = ConfigLexer::new(settings_file);
+    let parser = grammar_config::ConfigsParser::new();
     parser.parse(lexer)
 }
 
@@ -88,7 +112,19 @@ mod tests {
     #[test]
     fn parses() {
         let header_source = include_str!("../config_variables.h");
-        let vars = parse_config_variables(header_source).unwrap();
+        let header2_source = include_str!("../variables.h");
+        let mut vars = parse_config_variables(header_source).unwrap();
+        vars.extend(parse_config_variables(header2_source).unwrap());
         assert!(!vars.is_empty())
+    }
+
+    #[test]
+    fn parses_config() {
+        let settings = include_str!("../settings_ddnet.cfg");
+        let vars = parse_config(settings).unwrap();
+
+        for var in &vars {
+            println!("{:?}", var);
+        }
     }
 }

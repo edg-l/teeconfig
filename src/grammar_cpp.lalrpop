@@ -28,6 +28,7 @@ extern {
         "flag econ" => Token::FlagEcon,
         "flag game" => Token::FlagGame,
         "flag colalpha" => Token::FlagColAlpha,
+        "flag collight" => Token::FlagColLight,
 
         "string lit" => Token::StringLiteral(<String>),
         "ident" => Token::Identifier(<String>),
@@ -57,6 +58,7 @@ Flag: CFGFlags = {
     "flag econ" => CFGFlags::ECON,
     "flag game" => CFGFlags::GAME,
     "flag colalpha" => CFGFlags::COLALPHA,
+    "flag collight" => CFGFlags::COLLIGHT,
 }
 
 Flags: CFGFlags = {
