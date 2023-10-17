@@ -32,6 +32,7 @@ bitflags! {
     }
 }
 
+/// A configuration entry parsed from the header source file.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConfigEntry {
     /// The description of this config entry.
@@ -46,6 +47,7 @@ pub struct ConfigEntry {
     pub symbol: String,
 }
 
+/// The type of the entry.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EntryType {
     Str {

@@ -57,6 +57,7 @@ impl<'input> Iterator for ConfigLexer<'input> {
     }
 }
 
+/// A value for the given config line.
 #[derive(Debug, Clone)]
 pub enum Value {
     Int(i64),
@@ -65,6 +66,7 @@ pub enum Value {
     Key(String),
 }
 
+/// A line from a teeworlds/ddnet config file.
 #[derive(Debug, Clone)]
 pub struct ConfigLine {
     pub name: String,
