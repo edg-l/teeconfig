@@ -79,6 +79,16 @@ pub enum EntryType {
 lalrpop_mod!(pub(crate) grammar_cpp);
 lalrpop_mod!(pub(crate) grammar_config);
 
+/// An already loaded `config_variables.h` file, ready to be parsed.
+///
+/// There are no guarantees this is up to date.
+pub static BUILTIN_CONFIG_VARIABLES_H: &str = include_str!("../config_variables.h");
+
+/// An already loaded `variables.h` file, ready to be parsed.
+///
+/// There are no guarantees this is up to date.
+pub static BUILTIN_VARIABLES_H: &str = include_str!("../variables.h");
+
 /// Parses the given header file containing the MACRO_CONFIG_XXX options.
 ///
 /// Usually at `src/engine/shared/config_variables.h`
@@ -113,10 +123,8 @@ mod tests {
 
     #[test]
     fn parses() {
-        let header_source = include_str!("../config_variables.h");
-        let header2_source = include_str!("../variables.h");
-        let mut vars = parse_config_variables(header_source).unwrap();
-        vars.extend(parse_config_variables(header2_source).unwrap());
+        let mut vars = parse_config_variables(BUILTIN_CONFIG_VARIABLES_H).unwrap();
+        vars.extend(parse_config_variables(BUILTIN_VARIABLES_H).unwrap());
         assert!(!vars.is_empty())
     }
 
